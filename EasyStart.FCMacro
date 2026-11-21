@@ -15,8 +15,8 @@ gives Save / Continue Without Saving / Cancel.
 __Name__ = "EasyStart"
 __Comment__ = "Start a new document already set up as a Part with an active Body and a Spreadsheet, named and saved from one dialog."
 __Author__ = "Benjamin M. Wood (JohnnyGod)"
-__Version__ = "2026.11.15"
-__Date__ = "2026-11-15"
+__Version__ = "2026.11.21"
+__Date__ = "2026-11-21"
 __License__ = "MIT"
 __Web__ = "https://github.com/Johnny-God/EasyStart"
 __Wiki__ = "https://wiki.freecad.org/Macro_EasyStart"
@@ -72,7 +72,7 @@ class SaveDialog(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint
                             & ~QtCore.Qt.WindowMinMaxButtonsHint)
         layout = QtWidgets.QVBoxLayout(self)
-        layout.setSpacing(5)
+        layout.setSpacing(6)
         layout.setContentsMargins(10, 10, 10, 10)
 
         # Input field for document name
@@ -85,9 +85,6 @@ class SaveDialog(QtWidgets.QDialog):
         self.path_display = QtWidgets.QLabel("Save Path: " + self.current_path, self)
         layout.addWidget(self.path_display)
 
-        self.dialog_width = self._measure_width()
-        self.setFixedWidth(self.dialog_width)
-
         # Checkboxes
         self.new_sketch_checkbox = QtWidgets.QCheckBox("Create Sketch", self)
         self.new_sketch_checkbox.setChecked(
@@ -99,14 +96,20 @@ class SaveDialog(QtWidgets.QDialog):
             _prefs(DIALOG_PARAM).GetBool("create_containing_folder", True))
         layout.addWidget(self.checkbox)
 
-        # Buttons
+        # Buttons — full width so the rows line up; centre the buttons inside.
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal, self)
+        self.buttons.setCenterButtons(True)
         self.save_button = self.buttons.addButton("Save", QtWidgets.QDialogButtonBox.AcceptRole)
         self.dont_save_button = self.buttons.addButton(
             "Continue Without Saving", QtWidgets.QDialogButtonBox.RejectRole)
         self.discard_button = self.buttons.addButton(
             "Cancel", QtWidgets.QDialogButtonBox.DestructiveRole)
-        layout.addWidget(self.buttons, 0, QtCore.Qt.AlignCenter)
+        layout.addWidget(self.buttons)
+
+        # Width = widest row (path label or button row). All widgets must exist
+        # first, or the button row gets clipped.
+        self.dialog_width = self._measure_width()
+        self.setFixedWidth(self.dialog_width)
 
         # Update Save Path Button
         self.update_button = QtWidgets.QPushButton("Change Save Path")
@@ -124,7 +127,8 @@ class SaveDialog(QtWidgets.QDialog):
     def _measure_width(self):
         metrics = QtGui.QFontMetrics(self.path_display.font())
         text_width = metrics.horizontalAdvance(self.path_display.text())
-        return max(text_width + 40, 400)
+        button_width = self.buttons.sizeHint().width()
+        return max(text_width + 40, button_width + 40, 400)
 
     def resizeEvent(self, event):
         super(SaveDialog, self).resizeEvent(event)
